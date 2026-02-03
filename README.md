@@ -1,2 +1,1 @@
-# -web3-minimart
-flash deliveries
+Run npm install then npm start. Set webhook to /webhook/telegram
