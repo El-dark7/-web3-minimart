@@ -1,170 +1,46 @@
 const axios = require("axios");
 const orderEngine = require("../services/order.engine");
 
-const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const API = `https://api.telegram.org/bot${BOT_TOKEN}`;
-
-async function sendMessage(chatId, text, keyboard = null) {
-  const payload = {
-    chat_id: chatId,
-    text
-  };
-
-  if (keyboard) {
-    payload.reply_markup = {
-      inline_keyboard: keyboard
-    };
-  }
-
-  await axios.post(`${API}/sendMessage`, payload);
-}
+const API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 
 module.exports = async function telegramRouter(update) {
-  const message = update.message;
-  const callback = update.callback_query;
+  if (!update.message && !update.callback_query) return;
 
-  /* =========================
-     /START COMMAND
-  ========================= */
-  if (message && message.text === "/start") {
-    const chatId = message.chat.id;
+  // /start
+  if (update.message?.text === "/start") {
+    const chatId = update.message.chat.id;
 
-    await sendMessage(
-      chatId,
-      "🫐 *Welcome to Blueberries Mini App*\n\nWhat do you want today?",
-      [
-        [{ text: "🍔 Food", callback_data: "CAT_FOOD" }],
-        [{ text: "🛒 Groceries", callback_data: "CAT_GROCERIES" }],
-        [{ text: "🏡 Airbnb", callback_data: "CAT_AIRBNB" }],
-        [{ text: "🛠 Errands", callback_data: "CAT_ERRANDS" }]
-      ]
-    );
-
-    return;
+    await axios.post(`${API}/sendMessage`, {
+      chat_id: chatId,
+      text: "🫐 Welcome to Blueberries Mini App\nChoose a category:",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🍔 Food", callback_data: "CAT_food" }],
+          [{ text: "🛒 Groceries", callback_data: "CAT_groceries" }],
+          [{ text: "🏡 Airbnb", callback_data: "CAT_airbnb" }],
+          [{ text: "🛠 Errands", callback_data: "CAT_errands" }]
+        ]
+      }
+    });
   }
 
-  /* =========================
-     INLINE BUTTON HANDLER
-  ========================= */
-  if (callback) {
-    const chatId = callback.message.chat.id;
-    const data = callback.data;
+  // Category click
+  if (update.callback_query) {
+    const chatId = update.callback_query.message.chat.id;
+    const data = update.callback_query.data;
 
-    // Always acknowledge callback (Telegram requirement)
-    await axios.post(`${API}/answerCallbackQuery`, {
-      callback_query_id: callback.id
-    });
-
-    /* =========================
-       CATEGORY SELECTION
-    ========================= */
     if (data.startsWith("CAT_")) {
-      const category = data.replace("CAT_", "").toLowerCase();
+      const category = data.split("_")[1];
 
-      const products = orderEngine.getProductsByCategory(category);
-
-      if (!products.length) {
-        await sendMessage(chatId, "❌ No items available.");
-        return;
-      }
-
-      const keyboard = products.map(p => [
-        {
-          text: `${p.name} – KES ${p.price}`,
-          callback_data: `ADD_${p.id}`
+      await axios.post(`${API}/sendMessage`, {
+        chat_id: chatId,
+        text: `📦 ${category.toUpperCase()} selected.\nOrder created.`,
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "💳 Pay Now", callback_data: `PAY_${category}` }]
+          ]
         }
-      ]);
-
-      keyboard.push([{ text: "⬅️ Back", callback_data: "BACK_HOME" }]);
-
-      await sendMessage(
-        chatId,
-        `📦 *${category.toUpperCase()} MENU*`,
-        keyboard
-      );
-
-      return;
-    }
-
-    /* =========================
-       ADD PRODUCT TO CART
-    ========================= */
-    if (data.startsWith("ADD_")) {
-      const productId = parseInt(data.replace("ADD_", ""));
-
-      orderEngine.addToCart(chatId, productId);
-
-      await sendMessage(
-        chatId,
-        "✅ Item added to cart",
-        [
-          [{ text: "🧾 View Cart", callback_data: "VIEW_CART" }],
-          [{ text: "➕ Add More", callback_data: "BACK_HOME" }]
-        ]
-      );
-
-      return;
-    }
-
-    /* =========================
-       VIEW CART
-    ========================= */
-    if (data === "VIEW_CART") {
-      const cart = orderEngine.getCart(chatId);
-
-      if (!cart.items.length) {
-        await sendMessage(chatId, "🛒 Your cart is empty.");
-        return;
-      }
-
-      let text = "🧾 *Your Cart*\n\n";
-      cart.items.forEach(i => {
-        text += `• ${i.name} – KES ${i.price}\n`;
       });
-      text += `\nTotal: KES ${cart.total}`;
-
-      await sendMessage(
-        chatId,
-        text,
-        [
-          [{ text: "💳 Checkout", callback_data: "CHECKOUT" }],
-          [{ text: "⬅️ Back", callback_data: "BACK_HOME" }]
-        ]
-      );
-
-      return;
-    }
-
-    /* =========================
-       CHECKOUT
-    ========================= */
-    if (data === "CHECKOUT") {
-      const order = orderEngine.createOrderFromCart(chatId);
-
-      await sendMessage(
-        chatId,
-        `✅ Order *${order.id}* created\n\nAmount: KES ${order.total}\n\nProceed to payment.`
-      );
-
-      return;
-    }
-
-    /* =========================
-       BACK TO HOME
-    ========================= */
-    if (data === "BACK_HOME") {
-      await sendMessage(
-        chatId,
-        "🏠 Main Menu",
-        [
-          [{ text: "🍔 Food", callback_data: "CAT_FOOD" }],
-          [{ text: "🛒 Groceries", callback_data: "CAT_GROCERIES" }],
-          [{ text: "🏡 Airbnb", callback_data: "CAT_AIRBNB" }],
-          [{ text: "🛠 Errands", callback_data: "CAT_ERRANDS" }]
-        ]
-      );
-
-      return;
     }
   }
 };
