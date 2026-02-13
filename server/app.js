@@ -1,3 +1,4 @@
+app.use("/admin", express.static("admin"));
 const express = require("express");
 const dotenv = require("dotenv");
 const orderEngine = require("./services/order.engine");
