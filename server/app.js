@@ -1,33 +1,49 @@
-require("dotenv").config();
 const express = require("express");
+const dotenv = require("dotenv");
+const orderEngine = require("./services/order.engine");
 
-const telegramRouter = require("./telegram/router");
-
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 10000;
-
 app.use(express.json());
 
 /* =========================
-   TELEGRAM WEBHOOK
+   PRODUCTS API
 ========================= */
-app.post("/webhook/telegram", async (req, res) => {
+app.get("/api/products", (req, res) => {
+  res.json(orderEngine.getAllProducts());
+});
+
+/* =========================
+   CREATE ORDER (WEB)
+========================= */
+app.post("/api/orders", (req, res) => {
   try {
-    await telegramRouter(req.body);
-    res.sendStatus(200);
+    const { items, chatId } = req.body;
+
+    const id = "ORD-" + Date.now();
+
+    const total = items.reduce((s, i) => s + i.price, 0);
+
+    res.json({
+      id,
+      chatId,
+      total,
+      status: "CREATED"
+    });
+
   } catch (err) {
-    console.error("Telegram router error:", err.message);
-    res.sendStatus(500);
+    res.status(400).json({ error: err.message });
   }
 });
 
 /* =========================
-   HEALTH
+   ROOT
 ========================= */
 app.get("/", (_, res) => {
-  res.send("🫐 Blueberries server running");
+  res.send("Blueberries Platform Running");
 });
 
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on ${PORT}`);
 });
