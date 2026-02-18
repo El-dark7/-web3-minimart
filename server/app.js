@@ -16,6 +16,7 @@ const io = new Server(server, {
 });
 
 app.use(express.json());
+app.use(express.static("public"));
 app.use("/admin", express.static("admin"));
 
 /* =========================
@@ -181,9 +182,6 @@ io.on("connection", (socket) => {
    ROOT
 ========================= */
 
-app.get("/", (_, res) => {
-  res.send("🫐 Blueberries Platform Running");
-});
 
 /* =========================
    START SERVER
