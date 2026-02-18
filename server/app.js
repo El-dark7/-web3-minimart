@@ -96,7 +96,10 @@ app.post("/api/orders", async (req, res) => {
     }
 
     const id = "ORD-" + Date.now();
-    const total = items.reduce((sum, item) => sum + item.price, 0);
+    const total = items.reduce(
+  (sum, item) => sum + (item.price * item.qty),
+  0
+);
 
     await pool.query(
       `INSERT INTO orders (id, chat_id, items, total, status)
