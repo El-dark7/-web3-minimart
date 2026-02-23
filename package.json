@@ -1,10 +1,4 @@
 
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/package.json b/package.json
-index 743b04200978d8a20bfa116793a4df1bc5dc681b..c75434a34566e8c6dfed56865ced23bacc3c154d 100644
---- a/package.json
-+++ b/package.json
-@@ -1,20 +1,22 @@
  {
    "name": "web3-minimart",
    "version": "1.0.0",
