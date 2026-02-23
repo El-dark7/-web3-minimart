@@ -1,9 +1,3 @@
- (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/README.md b/README.md
-index 641c8c8cf644915e5580e086a28fccadc7c0478f..aba471c269e5175549eeac40470fe35e4763edb3 100644
---- a/README.md
-+++ b/README.md
-@@ -1 +1,40 @@
 -Run npm install then npm start. Set webhook to /webhook/telegram
 \ No newline at end of file
 +# Web3 MiniMart
