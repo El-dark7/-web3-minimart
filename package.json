@@ -1,28 +1,32 @@
-{
-  "name": "web3-minimart",
-  "version": "1.0.0",
-  "private": true,
-  "type": "commonjs",
-  "engines": {
-    "node": ">=18"
-  },
-  "scripts": {
-    "start": "npm run start:server",
-    "start:server": "node server/app.js",
-    "start:bot": "node server/bot.js",
-    "start:all": "node scripts/run-all.js",
-    "dev": "npm run dev:server",
-    "dev:server": "node --watch server/app.js",
-    "dev:bot": "node --watch server/bot.js",
-    "dev:all": "node scripts/run-all.js --watch",
-    "photos:check": "node scripts/check-product-photos.js"
-  },
-  "dependencies": {
-    "axios": "^1.6.8",
-    "dotenv": "^16.6.1",
-    "express": "^4.19.2",
-    "node-telegram-bot-api": "^0.66.0",
-    "pg": "^8.11.5",
-    "socket.io": "^4.7.5"
-  }
-}
+
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/package.json b/package.json
+index 743b04200978d8a20bfa116793a4df1bc5dc681b..c75434a34566e8c6dfed56865ced23bacc3c154d 100644
+--- a/package.json
++++ b/package.json
+@@ -1,20 +1,22 @@
+ {
+   "name": "web3-minimart",
+   "version": "1.0.0",
+   "private": true,
+   "type": "commonjs",
+   "engines": {
+     "node": ">=18"
+   },
+   "scripts": {
+-    "start": "node server/app.js"
++    "start": "node server/app.js",
++    "dev:all": "bash scripts/run-local.sh",
++    "smoke:api": "bash scripts/smoke-api.sh"
+   },
+   "dependencies": {
+     "axios": "^1.6.8",
+     "dotenv": "^16.4.5",
+     "express": "^4.19.2",
+     "node-telegram-bot-api": "^0.66.0",
+     "socket.io": "^4.7.5",
+     "pg": "^8.11.5"
+   }
+ }
+ 
+EOF
