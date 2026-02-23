@@ -1,24 +1,209 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blueberries Admin</title>
   <style>
-    body { font-family: Arial; background: #111; color: white; }
+    :root {
+      --bg: #0b1220;
+      --panel: #131d30;
+      --panel-2: #17253f;
+      --line: #213252;
+      --text: #eef3ff;
+      --muted: #9fb0d0;
+      --ok: #2ec27e;
+      --warn: #f5c451;
+      --danger: #ef4444;
+      --brand: #38bdf8;
+    }
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: radial-gradient(circle at top right, #12315b 0%, var(--bg) 45%);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .status-chip {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 6px 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      background: var(--danger);
+      vertical-align: middle;
+    }
+    .dot.online { background: var(--ok); }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .stat {
+      background: linear-gradient(180deg, var(--panel), #101a2c);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .stat .k { color: var(--muted); font-size: 12px; }
+    .stat .v { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    select, button, input {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+    }
+    button { cursor: pointer; }
+    button.primary { background: #0d3b66; border-color: #185589; }
+    .layout {
+      display: grid;
+      grid-template-columns: 2.1fr 1fr;
+      gap: 14px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 120px;
+    }
+    #orders { min-height: 200px; }
     .order {
-      background: #1c1c1c;
+      background: #101a2c;
       padding: 15px;
       margin: 10px 0;
-      border-radius: 8px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
     }
-    button { padding: 6px 10px; margin-top: 8px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .meta { color: var(--muted); font-size: 13px; }
+    .pill {
+      display: inline-block;
+      background: #164d72;
+      color: #d7efff;
+      border: 1px solid #2d79aa;
+      border-radius: 20px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+    .feed-item {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .feed-item:last-child { border-bottom: none; }
+    .error-banner {
+      display: none;
+      background: #4a1720;
+      border: 1px solid #7c1d2d;
+      color: #ffd8dd;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .layout { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-<h1>🫐 Blueberries Admin Panel</h1>
-<div id="orders"></div>
+<div class="topbar">
+  <div class="title">Blueberries Ops Command</div>
+  <div class="status-chip"><span id="socketDot" class="dot"></span><span id="socketState">Socket Offline</span></div>
+</div>
 
+<div class="stats">
+  <div class="stat"><div class="k">Total Orders</div><div id="statTotal" class="v">0</div></div>
+  <div class="stat"><div class="k">Active Orders</div><div id="statActive" class="v">0</div></div>
+  <div class="stat"><div class="k">Ready For Dispatch</div><div id="statReady" class="v">0</div></div>
+  <div class="stat"><div class="k">SLA Breaches</div><div id="statSla" class="v">0</div></div>
+  <div class="stat"><div class="k">Completed Today</div><div id="statDone" class="v">0</div></div>
+</div>
+
+<div id="errorBanner" class="error-banner"></div>
+<div class="toolbar">
+  <label for="riderSelect">Default Rider</label>
+  <select id="riderSelect"></select>
+  <label for="statusFilter">Status</label>
+  <select id="statusFilter">
+    <option value="ALL">All</option>
+    <option value="CREATED">Created</option>
+    <option value="CONFIRMED">Confirmed</option>
+    <option value="PREPARING">Preparing</option>
+    <option value="READY_FOR_PICKUP">Ready For Pickup</option>
+    <option value="ASSIGNED">Assigned</option>
+    <option value="PICKED_UP">Picked Up</option>
+    <option value="ON_THE_WAY">On The Way</option>
+    <option value="DELIVERED">Delivered</option>
+    <option value="COMPLETED">Completed</option>
+    <option value="CANCELLED">Cancelled</option>
+  </select>
+  <input id="searchInput" placeholder="Search order/customer/rider" />
+  <button class="primary" onclick="runBatchDispatch()">Run Batch Dispatch</button>
+  <button onclick="runFlowSweep()">Run Auto Flow</button>
+  <button onclick="refreshData()">Refresh</button>
+  <span id="flowStatus" class="meta"></span>
+</div>
+<div class="toolbar">
+  <label for="photoInput">Upload Product Photos</label>
+  <input id="photoInput" type="file" accept=".jpg,.jpeg,.png,.webp" multiple />
+  <button onclick="uploadProductPhotos()">Upload Selected</button>
+  <button onclick="loadPhotoCoverage()">Photo Coverage</button>
+  <span id="photoStatus" class="meta"></span>
+</div>
+
+<div class="layout">
+  <div class="panel">
+    <h3 style="margin-top:0">Orders</h3>
+    <div id="orders"></div>
+  </div>
+  <div class="panel">
+    <h3 style="margin-top:0">Dispatch Queue</h3>
+    <div id="dispatchQueue"></div>
+    <hr style="border-color:#213252;border-width:1px 0 0;margin:12px 0" />
+    <h3 style="margin-top:0">Live Feed</h3>
+    <div id="liveFeed"></div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>
-<script src="/socket.io/socket.io.js"></script>

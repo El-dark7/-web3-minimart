@@ -2,13 +2,90 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <title>Blueberries</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blueberries MiniMart</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>🫐 Blueberries</h1>
-  <div id="products"></div>
+  <div class="app-shell">
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-dot"></div>
+        <div>
+          <h1>Blueberries MiniMart</h1>
+          <p>Fast retail and lifestyle marketplace</p>
+        </div>
+      </div>
+
+      <div class="top-controls">
+        <input id="searchInput" class="search" placeholder="Search products, services, stays..." />
+        <select id="zoneSelect">
+          <option value="CBD">Deliver to CBD</option>
+          <option value="NYALI">Deliver to Nyali</option>
+          <option value="BAMBURI">Deliver to Bamburi</option>
+          <option value="KISAUNI">Deliver to Kisauni</option>
+        </select>
+        <select id="sortSelect">
+          <option value="featured">Sort: Featured</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="rating_desc">Top Rated</option>
+          <option value="name_asc">Name: A-Z</option>
+        </select>
+        <button id="refreshBtn" class="refresh-btn" type="button">Refresh Catalog</button>
+        <span id="syncStamp" class="sync-stamp">Last sync: waiting</span>
+        <button id="cartToggle" class="cart-toggle">
+          Cart <span id="cartCount" class="count-badge">0</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <h2>Professional everyday commerce, one checkout.</h2>
+        <p>Shop food, groceries, stays, and errands with reliable dispatch and live order tracking.</p>
+      </div>
+      <div class="hero-metrics">
+        <div><strong>80+</strong><span>Active Listings</span></div>
+        <div><strong>4</strong><span>Core Categories</span></div>
+        <div><strong>Live</strong><span>Dispatch Intelligence</span></div>
+      </div>
+    </section>
+
+    <section class="category-row" id="categoryTabs"></section>
+
+    <main class="main-layout">
+      <section class="catalog-panel">
+        <div class="catalog-head">
+          <h3>Marketplace</h3>
+          <p id="resultCount">0 items</p>
+        </div>
+        <div id="products" class="products-grid"></div>
+      </section>
+
+      <aside id="cartPanel" class="cart-panel">
+        <h3>Your Cart</h3>
+        <div id="cartItems" class="cart-items"></div>
+
+        <div class="cart-summary">
+          <div><span>Subtotal</span><strong id="cartSubtotal">KES 0</strong></div>
+          <div><span>Service Fee</span><strong id="cartService">KES 0</strong></div>
+          <div class="grand"><span>Total</span><strong id="cartTotal">KES 0</strong></div>
+          <button id="checkoutBtn" onclick="checkoutFromCart()">Checkout</button>
+        </div>
+
+        <div id="orderBox" class="order-track hidden">
+          <h4>Current Order</h4>
+          <p id="orderText"></p>
+          <div class="confirm-row">
+            <input id="deliveryCodeInput" placeholder="Delivery code" />
+            <button id="confirmBtn" onclick="confirmDelivery()" disabled>Confirm Delivery</button>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>
